@@ -1,0 +1,88 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "AANTVr9CVVyzsgviODY6Wi2thuM=",
+			"path": "github.com/fatih/color",
+			"revision": "62e9147c64a1ed519147b62a56a14e83e2be02c1",
+			"revisionTime": "2017-05-23T20:24:04Z"
+		},
+		{
+			"checksumSHA1": "v6p6+PwrahSjHm+QN393An8yv4g=",
+			"path": "github.com/go-hayden-base/cmd",
+			"revision": "93660b7d3dfefdfab613424c66f48a4bcd77034f",
+			"revisionTime": "2017-04-05T03:20:05Z"
+		},
+		{
+			"checksumSHA1": "dCpeqHzzKxfFMgEmicHYHGIdhYk=",
+			"path": "github.com/go-hayden-base/foundation",
+			"revision": "154d3216cfff7e217345e3047d99e982e93b5a81",
+			"revisionTime": "2017-06-23T06:01:47Z"
+		},
+		{
+			"checksumSHA1": "1nPsVvQ1kmrdbLjHHJb5TvzcL0o=",
+			"path": "github.com/go-hayden-base/fs",
+			"revision": "05720437d4318eba72bbeceef81c511d5121a60a",
+			"revisionTime": "2017-03-08T06:45:52Z"
+		},
+		{
+			"checksumSHA1": "QFLl8fa5L13NyRNGC+WNkUWZuA4=",
+			"path": "github.com/go-hayden-base/pod",
+			"revision": "780c2f2a6a14788a3bb7294e9cd1f3ee5f9263af",
+			"revisionTime": "2017-09-04T06:08:07Z"
+		},
+		{
+			"checksumSHA1": "N8qWMqTCxbfa+arjrUmIOQOEXKM=",
+			"path": "github.com/go-hayden-base/version",
+			"revision": "5649d79e64d00abb5f725d4876c7757fe0df2764",
+			"revisionTime": "2017-03-06T07:11:12Z"
+		},
+		{
+			"checksumSHA1": "tUGxc7rfX0cmhOOUDhMuAZ9rWsA=",
+			"path": "github.com/hashicorp/go-version",
+			"revision": "03c5bf6be031b6dd45afec16b1cf94fc8938bc77",
+			"revisionTime": "2017-02-02T08:07:59Z"
+		},
+		{
+			"checksumSHA1": "MrqRXuqj5suGXqcRUUwi+YA7PmE=",
+			"origin": "github.com/fatih/color/vendor/github.com/mattn/go-colorable",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "62e9147c64a1ed519147b62a56a14e83e2be02c1",
+			"revisionTime": "2017-05-23T20:24:04Z"
+		},
+		{
+			"checksumSHA1": "a/chskqRYBBHS8lDTpB3FQqgHb8=",
+			"origin": "github.com/fatih/color/vendor/github.com/mattn/go-isatty",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "62e9147c64a1ed519147b62a56a14e83e2be02c1",
+			"revisionTime": "2017-05-23T20:24:04Z"
+		},
+		{
+			"checksumSHA1": "oBjdFvDUZpioGsB6URqe16hDQUg=",
+			"origin": "github.com/fatih/color/vendor/golang.org/x/sys/unix",
+			"path": "golang.org/x/sys/unix",
+			"revision": "62e9147c64a1ed519147b62a56a14e83e2be02c1",
+			"revisionTime": "2017-05-23T20:24:04Z"
+		},
+		{
+			"checksumSHA1": "YsB2DChSV9HxdzHaKATllAUKWSI=",
+			"path": "gopkg.in/mgo.v2/bson",
+			"revision": "3f83fa5005286a7fe593b055f0d7771a7dce4655",
+			"revisionTime": "2016-08-18T02:01:20Z"
+		},
+		{
+			"checksumSHA1": "XQsrqoNT1U0KzLxOFcAZVvqhLfk=",
+			"path": "gopkg.in/mgo.v2/internal/json",
+			"revision": "3f83fa5005286a7fe593b055f0d7771a7dce4655",
+			"revisionTime": "2016-08-18T02:01:20Z"
+		},
+		{
+			"checksumSHA1": "fALlQNY1fM99NesfLJ50KguWsio=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b",
+			"revisionTime": "2017-04-07T17:21:22Z"
+		}
+	],
+	"rootPath": "pandora"
+}
