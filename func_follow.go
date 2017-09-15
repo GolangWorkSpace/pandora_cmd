@@ -37,7 +37,7 @@ func cmd_follow(args *Args) {
 	}
 
 	selected := 0
-	new(foundation.IArag).Input(alert, func(arg string) foundation.IArgAction {
+	foundation.IArgInput(alert, func(arg string) foundation.IArgAction {
 		i, err := strconv.Atoi(arg)
 		if err != nil {
 			println("输入错误，请重新输入!")
@@ -48,7 +48,7 @@ func cmd_follow(args *Args) {
 		}
 		selected = i - 1
 		return foundation.IArgActionNext
-	}).Run()
+	})
 
 	aRefer := aReferListRes.Refs[selected]
 	url = _Host + "/api/logic/template/follow"

@@ -22,28 +22,33 @@ func cmd_acc(args *Args) {
 	if err != nil {
 		PrintThenExit("无法获取当前路径:", err.Error())
 	}
-	println("解析Podfile ...")
+
+	// 解析Podfile
+	print("解析Podfile ...")
 	podfilePath := filepath.Join(currentPath, "Podfile")
 	if !fs.FileExists(podfilePath) {
 		PrintThenExit("无法在当前目录找到Podfile文件!")
 	}
-
 	aPodfile, err := pod.NewPodfile(podfilePath)
 	if err != nil {
 		PrintThenExit("无法解析Podfile:", err.Error())
 	}
-	funcCheckPodfile(aPodfile)
+	print(" ok!\n")
 
+	print("获取CocoaPods仓库列表 ...")
 	repoPahts := funcGetRepoPaths()
 	if len(repoPahts) == 0 {
 		PrintThenExit("未找到Podspec仓库，程序退出！")
 	}
+	print(" ok!\n")
 
+	// 选择仓库
 	repoPath, repoName := funcGetSelectRepo(repoPahts)
 	if err := funcUpdateRepo(repoName); err != nil {
 		PrintThenExit("更新仓库失败！")
 	}
 
+	// 获取需要解析的Podspec路径
 	needsParseSpecPaths, err := funcGetNeedsParseSpecPaths(repoPath, aPodfile)
 	if err != nil {
 		PrintThenExit("获取需要解析的Podspec失败:", err.Error())
@@ -65,18 +70,6 @@ func cmd_acc(args *Args) {
 	println(msg)
 }
 
-func funcCheckPodfile(aPodfile *pod.Podfile) {
-	for _, aTarget := range aPodfile.Targets {
-		for _, aPod := range aTarget.Modules {
-			if aPod.V == "" && aPod.SpecPath == ""{
-				PrintlnYellow("警告:", "未指定版本 ->", aPod.N)
-			} else if aPod.V == "" && aPod.SpecPath != "" {
-				PrintlnBlue("提示:", "指定路径 ", )
-			}
-		}
-	}
-}
-
 func funcGetCocoapodsRepoRoot() string {
 	var repoRoot string
 	user, err := user2.Current()
@@ -84,7 +77,7 @@ func funcGetCocoapodsRepoRoot() string {
 		repoRoot = filepath.Join(user.HomeDir, ".cocoapods", "repos")
 	}
 	if !fs.DirectoryExists(repoRoot) {
-		new(foundation.IArag).Input("无法找到CocoaPods的仓库根目录("+repoRoot+")，请手动指定(绝对路径):", func(arg string) foundation.IArgAction {
+		foundation.IArgInput("无法找到CocoaPods的仓库根目录("+repoRoot+")，请手动指定(绝对路径):", func(arg string) foundation.IArgAction {
 			if arg != "" && !filepath.IsAbs(arg) {
 				print("路径错误，请重新指定!")
 				return foundation.IArgActionRepet
@@ -95,7 +88,7 @@ func funcGetCocoapodsRepoRoot() string {
 			}
 			repoRoot = arg
 			return foundation.IArgActionNext
-		}).Run()
+		})
 	}
 	return repoRoot
 }
@@ -125,7 +118,7 @@ func funcGetSelectRepo(repoPaths []string) (string, string) {
 	}
 	l := len(repoPaths)
 	selectIdx := 0
-	new(foundation.IArag).Input(buffer.String(), func(arg string) foundation.IArgAction {
+	foundation.IArgInput(buffer.String(), func(arg string) foundation.IArgAction {
 		idx, err := strconv.Atoi(arg)
 		if err != nil || idx < 1 || idx > l {
 			println("输入错误！")
@@ -133,7 +126,7 @@ func funcGetSelectRepo(repoPaths []string) (string, string) {
 		}
 		selectIdx = idx
 		return foundation.IArgActionNext
-	}).Run()
+	})
 	selectedPath := repoPaths[selectIdx-1]
 	return selectedPath, filepath.Base(selectedPath)
 }
@@ -147,8 +140,8 @@ func funcUpdateRepo(name string) error {
 	if err != nil {
 		return err
 	}
-	print("等待Git完成 ...")
-	time.Sleep(3 * time.Second)
+	print("等待Git操作完成 ...")
+	time.Sleep(2 * time.Second)
 	print(" ok!\n")
 	return nil
 }
@@ -206,37 +199,62 @@ func funcGetSpecFilePath(root string) (string) {
 }
 
 func funcParseSpecAndGen(parseSpecPaths []string) error {
-	for _, p := range parseSpecPaths {
-		println("解析：" + p + " ...")
-		b, err := ioutil.ReadFile(p)
+	if len(parseSpecPaths) == 0 {
+		return nil
+	}
+	threadCount := 10
+	print("有需要解析的Podspec，")
+	foundation.IArgInput("请输入解析线程数，建议不超过20，直接回车将使用默认值10:\n", func(arg string) foundation.IArgAction {
+		if foundation.StrIsEmpty(arg) {
+			return foundation.IArgActionNext
+		}
+		count, err := strconv.Atoi(arg)
 		if err != nil {
-			return err
+			PrintlnRed("输入错误，请重新输入!")
+			return foundation.IArgActionRepet
 		}
+		if count < 1 {
+			PrintlnRed("线程数必须大于0，请重新输入！")
+			return foundation.IArgActionRepet
+		}
+		threadCount = count
+	})
 
-		podName, version, name := funcPodVersionName(p)
-		desDir := filepath.Join(".pandora_cache", "spec", podName, version)
-		if !fs.DirectoryExists(desDir) {
-			if err := os.MkdirAll(desDir, os.ModePerm); err != nil {
-				return err
-			}
-		}
+	for _, p := range parseSpecPaths {
 
-		ext := filepath.Ext(name)
-		if ext == ".podspec" {
-			if b, err = cmd.Exec("pod ipc spec " + p); err != nil {
-				return errors.New("无法解析Podspec: " + p)
-			}
-		}
-		if b, err = pod.SpecTrimDependency(b); err != nil {
-			return err
-		}
+	}
+	return nil
+}
 
-		des := filepath.Join(desDir, podName+".podspec.json")
-		if err = ioutil.WriteFile(des, b, os.ModePerm); err != nil {
+func funcDoParseSingleSpec(specpath string, c chan bool)  {
+	println("解析：" + specpath + " ...")
+	b, err := ioutil.ReadFile(specpath)
+	if err != nil {
+		PrintThenExit(err.Error())
+	}
+
+	podName, version, name := funcPodVersionName(p)
+	desDir := filepath.Join(".pandora_cache", "spec", podName, version)
+	if !fs.DirectoryExists(desDir) {
+		if err := os.MkdirAll(desDir, os.ModePerm); err != nil {
 			return err
 		}
 	}
-	return nil
+
+	ext := filepath.Ext(name)
+	if ext == ".podspec" {
+		if b, err = cmd.Exec("pod ipc spec " + p); err != nil {
+			return errors.New("无法解析Podspec: " + p)
+		}
+	}
+	if b, err = pod.SpecTrimDependency(b); err != nil {
+		return err
+	}
+
+	des := filepath.Join(desDir, podName+".podspec.json")
+	if err = ioutil.WriteFile(des, b, os.ModePerm); err != nil {
+		return err
+	}
 }
 
 func funcPodVersionName(p string) (string, string, string) {
@@ -298,7 +316,7 @@ func funcPodfileGen(buffer *bytes.Buffer) (string, error) {
 	confirmStr := "加速后的Podfile已经生成，请选择操作:\n" +
 		"1.替换（替换会将原Podfile重命名为Podfile加时间戳后缀的格式，如Podfile_20170903151211）\n" +
 		"2.不替换（选择不替换将会在当前目录生成Podfile_acc的文件）"
-	new(foundation.IArag).Input(confirmStr, func(arg string) foundation.IArgAction {
+	foundation.IArgInput(confirmStr, func(arg string) foundation.IArgAction {
 		selected, err := strconv.Atoi(arg)
 		if err != nil || selected < 1 || selected > 2 {
 			println("输入非法，请重新输入！")
@@ -306,7 +324,7 @@ func funcPodfileGen(buffer *bytes.Buffer) (string, error) {
 		}
 		replace = selected == 1
 		return foundation.IArgActionNext
-	}).Run()
+	})
 	if !replace {
 		if err := ioutil.WriteFile("Podfile_acc", buffer.Bytes(), os.ModePerm); err != nil {
 			return "", err

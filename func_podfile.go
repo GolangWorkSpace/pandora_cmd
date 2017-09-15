@@ -37,12 +37,12 @@ func cmd_podfile(args *Args) {
 		tv := res.NeedUpgradVersion
 		if tv > 0 {
 			gen := false
-			new(foundation.IArag).Input("Podfile模板已变动，是否重新生成Podfile? (y/n):", func(arg string) foundation.IArgAction {
+			foundation.IArgInput("Podfile模板已变动，是否重新生成Podfile? (y/n):", func(arg string) foundation.IArgAction {
 				if arg == "y" {
 					gen = true
 				}
 				return foundation.IArgActionNext
-			}).Run()
+			})
 
 			if !gen {
 				PrintThenExit("放弃操作，程序退出！")
@@ -60,12 +60,12 @@ func cmd_podfile(args *Args) {
 				PrintThenExit("发生错误，无法解析生成的Podfile版本！")
 			}
 			release := false
-			new(foundation.IArag).Input("Podfile草稿已生成，是否发布? (y/n):", func(arg string) foundation.IArgAction {
+			foundation.IArgInput("Podfile草稿已生成，是否发布? (y/n):", func(arg string) foundation.IArgAction {
 				if arg == "y" {
 					release = true
 				}
 				return foundation.IArgActionNext
-			}).Run()
+			})
 
 			if !gen {
 				PrintThenExit("放弃操作，程序退出！")
@@ -94,12 +94,12 @@ func cmd_podfile(args *Args) {
 	}
 	currentPath = filepath.Join(currentPath, "Podfile")
 	download := false
-	new(foundation.IArag).Input("是否在当前目录("+currentPath+")创建新Podfile? (y/n):", func(arg string) foundation.IArgAction {
+	foundation.IArgInput("是否在当前目录("+currentPath+")创建新Podfile? (y/n):", func(arg string) foundation.IArgAction {
 		if arg == "y" {
 			download = true
 		}
 		return foundation.IArgActionNext
-	}).Run()
+	})
 
 	if !download {
 		PrintThenExit("放弃操作，程序退出！")
