@@ -218,10 +218,12 @@ func funcParseSpecAndGen(parseSpecPaths []string) error {
 			return foundation.IArgActionRepet
 		}
 		threadCount = count
+		return foundation.IArgActionNext
 	})
-
+	c := make(chan bool, threadCount)
 	for _, p := range parseSpecPaths {
-
+		c <- true
+		go funcDoParseSingleSpec(p, c)
 	}
 	return nil
 }
@@ -233,28 +235,31 @@ func funcDoParseSingleSpec(specpath string, c chan bool)  {
 		PrintThenExit(err.Error())
 	}
 
-	podName, version, name := funcPodVersionName(p)
+	podName, version, name := funcPodVersionName(specpath)
 	desDir := filepath.Join(".pandora_cache", "spec", podName, version)
 	if !fs.DirectoryExists(desDir) {
 		if err := os.MkdirAll(desDir, os.ModePerm); err != nil {
-			return err
+			PrintThenExit("创建缓存目录失败："+desDir)
 		}
 	}
 
 	ext := filepath.Ext(name)
 	if ext == ".podspec" {
-		if b, err = cmd.Exec("pod ipc spec " + p); err != nil {
-			return errors.New("无法解析Podspec: " + p)
+		if b, err = cmd.Exec("pod ipc spec " + specpath); err != nil {
+			PrintThenExit("无法解析Podspec: " + specpath)
 		}
 	}
+
 	if b, err = pod.SpecTrimDependency(b); err != nil {
-		return err
+		PrintThenExit("去除依赖失败："+specpath)
 	}
 
 	des := filepath.Join(desDir, podName+".podspec.json")
 	if err = ioutil.WriteFile(des, b, os.ModePerm); err != nil {
-		return err
+		PrintThenExit("写入缓存spec失败：", des, err.Error())
 	}
+
+	<- c
 }
 
 func funcPodVersionName(p string) (string, string, string) {
