@@ -1,10 +1,26 @@
 package main
 
+import (
+	"errors"
+)
+
 type TemplateResp struct {
-	Errno     int `json:"errno,omitempty" bson:"errno,omitempty"`
-	Msg       string `json:"msg,omitempty" bson:"msg,omitempty"`
-	Template  *TemplateModel `json:"template,omitempty" bson:"template,omitempty"`
-	Templates []*TemplateModel `json:"templates,omitempty" bson:"templates,omitempty"`
+	Errno          int `json:"errno,omitempty" bson:"errno,omitempty"`
+	Msg            string `json:"msg,omitempty" bson:"msg,omitempty"`
+	VersionId      int64 `json:"version_id,omitempty" bson:"version_id,omitempty"`
+	Summary        string `json:"summary,omitempty" bson:"summary,omitempty"`
+	HierarchyNames []string `json:"hierarchy_names,omitempty" bson:"hierarchy_names,omitempty"`
+	Exists         bool `json:"exists,omitempty" bson:"exists,omitempty"`
+	Template       *TemplateModel `json:"template,omitempty" bson:"template,omitempty"`
+	Templates      []*TemplateModel `json:"templates,omitempty" bson:"templates,omitempty"`
+}
+
+func (s *TemplateResp)HasError() bool {
+	return s.Errno != 0
+}
+
+func (s *TemplateResp)Error(prefix string) error {
+	return errors.New(FormatResError(prefix, s.Msg, s.Errno))
 }
 
 type TemplateModel struct {
@@ -20,4 +36,6 @@ type TemplateModel struct {
 	Hierarchies    []*HierarchyModel `json:"hierarchies,omitempty" bson:"hierarchies,omitempty"`
 	CreateUser     string `json:"create_user,omitempty" bson:"create_user,omitempty"`
 	CreateTime     string `json:"create_time,omitempty" bson:"create_time,omitempty"`
+
+	Pods []*PodModule `json:"pods,omitempty" bson:"-"`
 }

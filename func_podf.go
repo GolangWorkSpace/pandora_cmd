@@ -1,12 +1,8 @@
 package main
 
 import (
-	"net/http"
 	"strconv"
 	"io/ioutil"
-	"encoding/json"
-	"github.com/go-hayden-base/foundation"
-	"errors"
 	"github.com/go-hayden-base/fs"
 	"path/filepath"
 	"bytes"
@@ -14,18 +10,16 @@ import (
 	"os"
 )
 
-func cmd_podfile(args *Args) {
-	team := args.GetSubargs("-t")[0]
-	project := args.GetSubargs("-p")[0]
-
-	if !VaildStringParams(team, project) {
-		PrintThenExit("参数错误！")
+func PodfileGenerate(parentMenu *CmdMenu) {
+	aProject, aTeam, err := ProjectSelect()
+	if err != nil {
+		PrintThenExit(err.Error())
 	}
 
 	var podfile *ProjectPodfileModel
 	for {
 		println("查询最新发布版的Podfile ...")
-		url := GenURL("/api/logic/project/podfile/latest", "team", team, "project", project)
+		url := GenURL("/api/logic/project/podfile/latest", "team", aTeam.Name, "project", aProject.Name)
 		var res *ProjectPodfileResponse
 		if err := GETParse(url, &res); err != nil {
 			PrintThenExit(err.Error())
@@ -36,19 +30,12 @@ func cmd_podfile(args *Args) {
 
 		tv := res.NeedUpgradVersion
 		if tv > 0 {
-			gen := false
-			foundation.IArgInput("Podfile模板已变动，是否重新生成Podfile? (y/n):", func(arg string) foundation.IArgAction {
-				if arg == "y" {
-					gen = true
-				}
-				return foundation.IArgActionNext
-			})
-
-			if !gen {
+			confirm := SimpleInputString("Podfile模板已变动，是否重新生成Podfile? (y/N):", true)
+			if confirm != "y" {
 				PrintThenExit("放弃操作，程序退出！")
 			}
 
-			url = GenURL("/api/logic/project/podfile/evolution", "team", team, "project", project)
+			url = GenURL("/api/logic/project/podfile/evolution", "team", aTeam.Name, "project", aProject.Name)
 			res = nil
 			if err := GETParse(url, &res); err != nil {
 				PrintThenExit(err.Error())
@@ -59,19 +46,18 @@ func cmd_podfile(args *Args) {
 			if res.Version < 1 {
 				PrintThenExit("发生错误，无法解析生成的Podfile版本！")
 			}
-			release := false
-			foundation.IArgInput("Podfile草稿已生成，是否发布? (y/n):", func(arg string) foundation.IArgAction {
-				if arg == "y" {
-					release = true
-				}
-				return foundation.IArgActionNext
-			})
 
-			if !gen {
+			confirm = SimpleInputString("Podfile草稿已生成，是否发布? (Y/n):", true)
+			if confirm != "Y" && confirm != "" {
 				PrintThenExit("放弃操作，程序退出！")
 			}
 
-			url = GenURL("/api/logic/project/podfile/release", "team", team, "project", project, "version", strconv.FormatInt(res.Version, 10))
+			url = GenURLWithParam("/api/logic/project/podfile/release", map[string]string{
+				"team":    aTeam.Name,
+				"project": aProject.Name,
+				"version": strconv.FormatInt(res.Version, 10),
+			})
+
 			res = nil
 			if err := GETParse(url, &res); err != nil {
 				PrintThenExit(err.Error())
@@ -88,21 +74,16 @@ func cmd_podfile(args *Args) {
 		}
 	}
 
-	currentPath, err := fs.CurrentDir()
-	if err != nil {
-		PrintThenExit("获取当前目录失败:", err.Error())
+	podfPath := filepath.Join(_Config.CurrentDir, "Podfile")
+	alert := ""
+	if fs.FileExists(podfPath) {
+		alert = "当前目录已存在Podfile是否覆盖?(Y/n):"
+	} else {
+		alert = "在当前目录生成Podfile?[Y/n]:"
 	}
-	currentPath = filepath.Join(currentPath, "Podfile")
-	download := false
-	foundation.IArgInput("是否在当前目录("+currentPath+")创建新Podfile? (y/n):", func(arg string) foundation.IArgAction {
-		if arg == "y" {
-			download = true
-		}
-		return foundation.IArgActionNext
-	})
-
-	if !download {
-		PrintThenExit("放弃操作，程序退出！")
+	confirm := SimpleInputString(alert, true)
+	if confirm != "Y" && confirm != "" {
+		PrintThenExit("放弃下载Podfile，程序退出!")
 	}
 
 	var buffer bytes.Buffer
@@ -151,7 +132,7 @@ func cmd_podfile(args *Args) {
 				if l >= 60 {
 					line += " #" + des
 				} else {
-					line += (GenSpaceString(60 - l)+"#"+des)
+					line += (GenSpaceString(60-l) + "#" + des)
 				}
 			}
 			line += "\n"
@@ -162,56 +143,8 @@ func cmd_podfile(args *Args) {
 	if podfile.Suffix != "" {
 		buffer.WriteString(podfile.Suffix)
 	}
-	if err := ioutil.WriteFile(currentPath, buffer.Bytes(), os.ModePerm); err != nil {
+	if err := ioutil.WriteFile(podfPath, buffer.Bytes(), os.ModePerm); err != nil {
 		PrintThenExit("保存Podfile发生错误:", err.Error())
 	}
-	println("Podfile已保存:", currentPath)
-}
-
-func intify(info map[string]interface{}, key string) (int, error) {
-	x, ok := info[key]
-	if !ok {
-		return 0, errors.New("无法获取" + key + "的值！")
-	}
-	r, ok := x.(float64)
-	if !ok {
-		return 0, errors.New("无法转换" + key + "的值！")
-	}
-	return int(r), nil
-}
-
-func errorInfo(info map[string]interface{}) (int, string, error) {
-	en, ok := info["errno"]
-	if !ok {
-		return 0, "", errors.New("无法获取errno!")
-	}
-	errno, ok := en.(float64)
-	if !ok {
-		return 0, "", errors.New("无法转换errno!")
-	}
-
-	m, ok := info["msg"]
-	message := ""
-	if ok {
-		message = m.(string)
-	}
-	return int(errno), message, nil
-}
-
-func GET(url string) (map[string]interface{}, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var res map[string]interface{}
-	if err := json.Unmarshal(body, &res); err != nil {
-		return nil, err
-	}
-	return res, nil
+	println("Podfile已保存:", podfPath)
 }

@@ -7,7 +7,8 @@ func SetupMenu() {
 		Title: "主菜单",
 		SubMenu: []*CmdMenu{
 			&CmdMenu{
-				Title: "Pod Install加速(本地)",
+				Title: "Pod Install加速",
+				Func:PodInstallAccLocal,
 			},
 			&CmdMenu{
 				Title: "登录",
@@ -27,14 +28,7 @@ func SetupMenu() {
 		SubMenu: []*CmdMenu{
 			&CmdMenu{
 				Title: "Pod Install加速",
-				SubMenu: []*CmdMenu{
-					&CmdMenu{
-						Title: "使用本地仓库",
-					},
-					&CmdMenu{
-						Title: "使用远端仓库",
-					},
-				},
+				Func: PodInstallAccLocal,
 			},
 			&CmdMenu{
 				Title: "团队管理",
@@ -98,20 +92,33 @@ func SetupMenu() {
 						Func:  TemplateShowOne,
 					},
 					&CmdMenu{
-						Title: "添加模板",
+						Title: "创建/修改模板",
+						Func:  TemplateCreate,
 					},
 					&CmdMenu{
 						Title: "跟进版本",
 						Func:  TemplateFollow,
 					},
 					&CmdMenu{
-						Title: "修改Pod版本",
+						Title: "添加Pod",
+						Func:  TemplatePodAdd,
 					},
 					&CmdMenu{
-						Title: "添加Pod",
+						Title: "修改Pod",
+						Func:  TemplatePodModifyVersion,
 					},
 					&CmdMenu{
 						Title: "移除Pod",
+						Func:  TemplatePodRemove,
+					},
+				},
+			},
+			&CmdMenu{
+				Title: "Podfile管理",
+				SubMenu: []*CmdMenu{
+					&CmdMenu{
+						Title: "Podfile生成",
+						Func:  PodfileGenerate,
 					},
 				},
 			},

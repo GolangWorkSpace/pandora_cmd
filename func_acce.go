@@ -17,12 +17,8 @@ import (
 	"strings"
 )
 
-func cmd_acc(args *Args) {
-	currentPath, err := fs.CurrentDir()
-	if err != nil {
-		PrintThenExit("无法获取当前路径:", err.Error())
-	}
-
+func PodInstallAccLocal(parentMenu *CmdMenu) {
+	currentPath := _Config.CurrentDir
 	// 解析Podfile
 	print("解析Podfile ...")
 	podfilePath := filepath.Join(currentPath, "Podfile")
@@ -31,7 +27,7 @@ func cmd_acc(args *Args) {
 	}
 	aPodfile, err := pod.NewPodfile(podfilePath)
 	if err != nil {
-		PrintThenExit("无法解析Podfile:", err.Error())
+		PrintThenExit("无法解析Podfile: ", err.Error())
 	}
 	print(" ok!\n")
 
