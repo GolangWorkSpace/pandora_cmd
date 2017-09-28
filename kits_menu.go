@@ -8,7 +8,11 @@ func SetupMenu() {
 		SubMenu: []*CmdMenu{
 			&CmdMenu{
 				Title: "Pod Install加速",
-				Func:PodInstallAccLocal,
+				Func:  PodInstallAccLocal,
+			},
+			&CmdMenu{
+				Title: "Podfile对比",
+				Func:  PodfileDiffLocal,
 			},
 			&CmdMenu{
 				Title: "登录",
@@ -28,7 +32,20 @@ func SetupMenu() {
 		SubMenu: []*CmdMenu{
 			&CmdMenu{
 				Title: "Pod Install加速",
-				Func: PodInstallAccLocal,
+				Func:  PodInstallAccLocal,
+			},
+			&CmdMenu{
+				Title: "仓库管理",
+				SubMenu: []*CmdMenu{
+					&CmdMenu{
+						Title: "仓库列表",
+						Func: RepoList,
+					},
+					&CmdMenu{
+						Title: "同步仓库",
+						Func: RepoSync,
+					},
+				},
 			},
 			&CmdMenu{
 				Title: "团队管理",
@@ -119,6 +136,10 @@ func SetupMenu() {
 					&CmdMenu{
 						Title: "Podfile生成",
 						Func:  PodfileGenerate,
+					},
+					&CmdMenu{
+						Title: "Podfile对比(本地)",
+						Func:  PodfileDiffLocal,
 					},
 				},
 			},

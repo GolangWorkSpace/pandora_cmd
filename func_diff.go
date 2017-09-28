@@ -60,14 +60,31 @@ func cmd_podfile_diff(args *Args) {
 	}
 }
 
-func cmd_diff_local(args *Args) {
-	old := args.GetFirstSubArgs("-old")
-	nw := args.GetFirstSubArgs("-new")
-	if old == "" || !fs.FileExists(old) {
-		PrintThenExit("old路径不存在！")
+func PodfileDiffLocal(parentMenu *CmdMenu) {
+	oldPath := ""
+	for {
+		oldPath = SimpleInputString("请输入旧版本Podfile文件路径:", false)
+		if !filepath.IsAbs(oldPath) {
+			oldPath = filepath.Join(_Config.CurrentDir, oldPath)
+		}
+		if !fs.FileExists(oldPath) {
+			PrintlnRed("文件" + oldPath + "不存在，请重新输入！")
+			continue
+		}
+		break
 	}
-	if nw == "" || !fs.FileExists(nw) {
-		PrintThenExit("new路径不存在！")
+
+	newPath := ""
+	for {
+		newPath = SimpleInputString("请输入新版本Podfile文件路径:", false)
+		if !filepath.IsAbs(newPath) {
+			newPath = filepath.Join(_Config.CurrentDir, newPath)
+		}
+		if !fs.FileExists(newPath) {
+			PrintlnRed("文件" + newPath + "不存在，请重新输入！")
+			continue
+		}
+		break
 	}
 
 	timestamp := time.Now().Local().Format("20060102150405")
@@ -85,7 +102,7 @@ func cmd_diff_local(args *Args) {
 	}
 
 	oldPodfilePath := filepath.Join(oldDir, "Podfile")
-	oldPodfileContent, err := ioutil.ReadFile(old)
+	oldPodfileContent, err := ioutil.ReadFile(oldPath)
 	if err != nil {
 		PrintThenExit(err.Error())
 	}
@@ -94,7 +111,7 @@ func cmd_diff_local(args *Args) {
 	}
 
 	newPodfilePath := filepath.Join(newDir, "Podfile")
-	newPodfileContent, err := ioutil.ReadFile(nw)
+	newPodfileContent, err := ioutil.ReadFile(newPath)
 	if err != nil {
 		PrintThenExit(err.Error())
 	}

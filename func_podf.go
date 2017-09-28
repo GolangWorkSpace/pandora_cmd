@@ -104,39 +104,15 @@ func PodfileGenerate(parentMenu *CmdMenu) {
 	for _, h := range podfile.Hierarchies {
 		buffer.WriteString("\n    # 层级：" + h.Name + "\n")
 		for _, aPod := range h.Pods {
-			line := "    pod '" + aPod.Name + "'"
-			if aPod.Version != "" {
-				line += ", '" + aPod.Version + "'"
-			}
-			l := len(aPod.Subspecs)
-			if l > 0 {
-				line += ", :subspecs => ['"
-				line += strings.Join(aPod.Subspecs, "', '")
-				line += "']"
-			}
-			des := strings.TrimSpace(aPod.Description)
-			if des != "" {
-				des = " Pod描述：" + des
-			}
-			if aPod.Addition != nil {
-				if aPod.Addition.ReferModuleViersion == aPod.Version {
-					des += " 参照：" + aPod.Addition.ReferName + "(" + aPod.Addition.ReferVersion + ")"
-				}
-				if aPod.Addition.NewestVersion != "" && aPod.Addition.NewestVersion != aPod.Version {
-					des += " 当前最新版本：" + aPod.Addition.NewestVersion
-				}
-			}
-
-			if des != "" {
-				l = len(line)
-				if l >= 60 {
-					line += " #" + des
-				} else {
-					line += (GenSpaceString(60-l) + "#" + des)
-				}
-			}
-			line += "\n"
+			line := prifGenPodLine(aPod)
 			buffer.WriteString(line)
+		}
+		if len(h.ImplicitPods) > 0 {
+			buffer.WriteString("\n    # 层级" + h.Name + "的隐性依赖\n")
+			for _, aPod := range h.ImplicitPods {
+				line := prifGenPodLine(aPod)
+				buffer.WriteString(line)
+			}
 		}
 	}
 	buffer.WriteString("end\n\n")
@@ -147,4 +123,40 @@ func PodfileGenerate(parentMenu *CmdMenu) {
 		PrintThenExit("保存Podfile发生错误:", err.Error())
 	}
 	println("Podfile已保存:", podfPath)
+}
+
+func prifGenPodLine(aPod *PodModule) string {
+	line := "    pod '" + aPod.Name + "'"
+	if aPod.Version != "" {
+		line += ", '" + aPod.Version + "'"
+	}
+	l := len(aPod.Subspecs)
+	if l > 0 {
+		line += ", :subspecs => ['"
+		line += strings.Join(aPod.Subspecs, "', '")
+		line += "']"
+	}
+	des := strings.TrimSpace(aPod.Description)
+	if des != "" {
+		des = " Pod描述：" + des
+	}
+	if aPod.Addition != nil {
+		if aPod.Addition.ReferModuleViersion == aPod.Version {
+			des += " 参照：" + aPod.Addition.ReferName + "(" + aPod.Addition.ReferVersion + ")"
+		}
+		if aPod.Addition.NewestVersion != "" && aPod.Addition.NewestVersion != aPod.Version {
+			des += " 当前最新版本：" + aPod.Addition.NewestVersion
+		}
+	}
+
+	if des != "" {
+		l = len(line)
+		if l >= 60 {
+			line += " #" + des
+		} else {
+			line += (GenSpaceString(60-l) + "#" + des)
+		}
+	}
+	line += "\n"
+	return line
 }

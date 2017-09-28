@@ -224,7 +224,7 @@ func funcParseSpecAndGen(parseSpecPaths []string) error {
 	return nil
 }
 
-func funcDoParseSingleSpec(specpath string, c chan bool)  {
+func funcDoParseSingleSpec(specpath string, c chan bool) {
 	println("解析：" + specpath + " ...")
 	b, err := ioutil.ReadFile(specpath)
 	if err != nil {
@@ -235,7 +235,7 @@ func funcDoParseSingleSpec(specpath string, c chan bool)  {
 	desDir := filepath.Join(".pandora_cache", "spec", podName, version)
 	if !fs.DirectoryExists(desDir) {
 		if err := os.MkdirAll(desDir, os.ModePerm); err != nil {
-			PrintThenExit("创建缓存目录失败："+desDir)
+			PrintThenExit("创建缓存目录失败：" + desDir)
 		}
 	}
 
@@ -247,7 +247,7 @@ func funcDoParseSingleSpec(specpath string, c chan bool)  {
 	}
 
 	if b, err = pod.SpecTrimDependency(b); err != nil {
-		PrintThenExit("去除依赖失败："+specpath)
+		PrintThenExit("去除依赖失败：" + specpath)
 	}
 
 	des := filepath.Join(desDir, podName+".podspec.json")
@@ -255,7 +255,7 @@ func funcDoParseSingleSpec(specpath string, c chan bool)  {
 		PrintThenExit("写入缓存spec失败：", des, err.Error())
 	}
 
-	<- c
+	<-c
 }
 
 func funcPodVersionName(p string) (string, string, string) {
@@ -276,6 +276,7 @@ func funcPodfileReplaceThenGenBuffer(podfilePath string) (*bytes.Buffer, error) 
 		if err != nil {
 			return
 		}
+		println(line)
 		if !regPod.MatchString(line) {
 			buffer.WriteString(line)
 			if !finished {
@@ -313,20 +314,11 @@ func funcPodfileReplaceThenGenBuffer(podfilePath string) (*bytes.Buffer, error) 
 }
 
 func funcPodfileGen(buffer *bytes.Buffer) (string, error) {
-	replace := false
 	confirmStr := "加速后的Podfile已经生成，请选择操作:\n" +
 		"1.替换（替换会将原Podfile重命名为Podfile加时间戳后缀的格式，如Podfile_20170903151211）\n" +
-		"2.不替换（选择不替换将会在当前目录生成Podfile_acc的文件）"
-	foundation.IArgInput(confirmStr, func(arg string) foundation.IArgAction {
-		selected, err := strconv.Atoi(arg)
-		if err != nil || selected < 1 || selected > 2 {
-			println("输入非法，请重新输入！")
-			return foundation.IArgActionRepet
-		}
-		replace = selected == 1
-		return foundation.IArgActionNext
-	})
-	if !replace {
+		"2.不替换（选择不替换将会在当前目录生成Podfile_acc的文件）\n:"
+	selected := SimpleInputSelectNum(confirmStr, 1, 2)
+	if selected != 0 {
 		if err := ioutil.WriteFile("Podfile_acc", buffer.Bytes(), os.ModePerm); err != nil {
 			return "", err
 		}
@@ -334,10 +326,10 @@ func funcPodfileGen(buffer *bytes.Buffer) (string, error) {
 	}
 
 	newName := "Podfile_" + time.Now().Local().Format("20060102150405")
-	if err := os.Rename("Podfile", "Podfile_"+newName); err != nil {
+	if err := os.Rename("Podfile", newName); err != nil {
 		return "", errors.New("重命名原Podfile失败 -> " + err.Error())
 	}
-	println("重命名原Podfile为" + newName)
+	println("原Podfile备份为" + newName)
 	if err := ioutil.WriteFile("Podfile", buffer.Bytes(), os.ModePerm); err != nil {
 		return "", errors.New("生成新Podfile失败 -> " + err.Error())
 	}
